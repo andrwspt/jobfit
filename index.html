@@ -28,8 +28,14 @@ button.sec{background:transparent;color:var(--accent2);border:1px solid var(--ac
 .bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:6px;}
 .bar > div{height:100%;background:var(--accent);transition:width .3s;}
 .matched{color:var(--accent);font-family:ui-monospace,Menlo,monospace;font-size:12px;}
-footer{padding:16px 24px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;text-align:center;}
+footer{padding:20px 24px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;text-align:center;}
 a{color:var(--accent2);}
+.cta{margin-top:10px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
+.cta a{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:6px;text-decoration:none;font-weight:600;font-size:13px;transition:transform .15s;}
+.cta a:hover{transform:scale(1.05);}
+.cta .kofi{background:#ff5e5b;color:#fff;}
+.cta .paypal{background:#003087;color:#fff;}
+.cta .share{background:transparent;color:var(--accent2);border:1px solid var(--accent2);}
 </style>
 </head>
 <body>
@@ -69,9 +75,12 @@ a{color:var(--accent2);}
 </div>
 
 <footer>
-  Free & open-source. If JobFit helps you land an interview, a $1 tip keeps the tools coming:
-  <a href="https://ko-fi.com/andrwspt" target="_blank" rel="noopener">Ko-fi</a> ·
-  <a href="https://paypal.me/andrwspt" target="_blank" rel="noopener">PayPal</a>
+  <div>Free & open-source. If JobFit helps you land an interview, a $1 tip keeps the tools coming:</div>
+  <div class="cta">
+    <a href="https://ko-fi.com/andrwspt" target="_blank" rel="noopener" class="kofi">☕ Ko-fi</a>
+    <a href="https://paypal.me/andrwspt" target="_blank" rel="noopener" class="paypal">💳 PayPal</a>
+    <a href="#" id="shareBtn" class="share">🔗 Share</a>
+  </div>
 </footer>
 
 <script>
@@ -105,12 +114,21 @@ $("#run").onclick=()=>{
   $("#bar").style.width=pct+"%";
   $("#gap").innerHTML=missing.slice(0,15).map(k=>`<li><span class="kw">${k}</span><span class="add">— add this</span></li>`).join("")||`<li style="color:var(--accent)">All top keywords present.</li>`;
   $("#matched").textContent=hit.join(" · ")||(none);
+  if(pct<90){
+    const nudge=document.createElement("div");
+    nudge.id="nudge";
+    nudge.style.cssText="margin-top:14px;padding:10px 14px;border:1px solid var(--accent);border-radius:8px;font-size:12px;color:var(--accent);text-align:center;";
+    nudge.innerHTML=`💡 Below 90%? Fix those missing keywords, then re-check. If JobFit helped, a $1 tip keeps it going: <a href="https://ko-fi.com/andrwspt" target="_blank" rel="noopener" style="color:#ff5e5b;font-weight:600;">Ko-fi</a> · <a href="https://paypal.me/andrwspt" target="_blank" rel="noopener" style="color:#58a6ff;font-weight:600;">PayPal</a>`;
+    const prev=document.getElementById("nudge"); if(prev) prev.remove();
+    $("#gap").after(nudge);
+  }
 };
 $("#sample").onclick=()=>{
   $("#resume").value="Experienced software developer with 5 years building web applications using JavaScript and Python. Led a team of 3 engineers to deliver a customer management system on AWS. Implemented REST APIs and managed PostgreSQL databases. Passionate about clean code and agile methodologies.";
   $("#jd").value="We are looking for a Senior Full Stack Engineer to join our growing team. You will design and build scalable microservices using Node.js and React. Experience with TypeScript, Docker, and Kubernetes is required. You will mentor junior engineers, conduct code reviews, and contribute to our CI/CD pipeline. Experience with cloud platforms (AWS preferred) and familiarity with GraphQL is a plus.";
 };
-$("#clear").onclick=()=>{$("#resume").value="";$("#jd").value="";$("#score").textContent="—";$("#bar").style.width="0";$("#gap").innerHTML="";$("#matched").textContent="";};
+$("clear").onclick=()=>{$("#resume").value="";$("#jd").value="";$("#score").textContent="—";$("#bar").style.width="0";$("#gap").innerHTML="";$("#matched").textContent="";};
+$("shareBtn").onclick=(e)=>{e.preventDefault();navigator.share?navigator.share({title:"JobFit — free resume gap checker",url:location.href}):navigator.clipboard.writeText(location.href);};
 </script>
 </body>
 </html>
