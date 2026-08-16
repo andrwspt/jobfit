@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JobFit — free resume gap checker</title>
+<style>
+:root{--bg:#0b0e13;--panel:#141922;--line:#232a36;--txt:#e6edf3;--muted:#7d8ba1;--accent:#4dd0a7;--accent2:#58a6ff;--warn:#e3b341;--bad:#f85149;}
+*{box-sizing:border-box;}
+body{margin:0;font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt);}
+header{padding:20px 24px;border-bottom:1px solid var(--line);}
+header h1{margin:0;font-size:20px;display:flex;align-items:center;gap:10px;}
+header .sub{color:var(--muted);font-size:13px;margin-top:4px;}
+.wrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px 24px;}
+@media(max-width:860px){.wrap{grid-template-columns:1fr;}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;}
+.panel h2{margin:0 0 8px;font-size:15px;color:var(--accent);}
+textarea{width:100%;min-height:280px;background:#0d1117;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:12px;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;resize:vertical;}
+.controls{display:flex;gap:10px;margin:12px 0;flex-wrap:wrap;}
+button{background:var(--accent);color:#04241a;border:0;border-radius:8px;padding:10px 18px;font-weight:600;cursor:pointer;font-size:14px;}
+button.sec{background:transparent;color:var(--accent2);border:1px solid var(--accent2);}
+.score{font-size:44px;font-weight:700;line-height:1;}
+.scorelbl{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px;}
+.gap{list-style:none;margin:0;padding:0;}
+.gap li{padding:8px 12px;border:1px solid var(--line);border-radius:6px;margin-bottom:6px;display:flex;align-items:center;gap:10px;}
+.gap .kw{font-family:ui-monospace,Menlo,monospace;color:var(--bad);font-weight:600;}
+.gap .add{color:var(--accent);font-size:12px;}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:6px;}
+.bar > div{height:100%;background:var(--accent);transition:width .3s;}
+.matched{color:var(--accent);font-family:ui-monospace,Menlo,monospace;font-size:12px;}
+footer{padding:16px 24px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;text-align:center;}
+a{color:var(--accent2);}
+</style>
+</head>
+<body>
+<header>
+  <h1>JobFit</h1>
+  <div class="sub">Free, offline resume gap checker. Paste your resume + a job description, get missing keywords and a match score. No server, no tracking, no account.</div>
+</header>
+
+<div class="wrap">
+  <div class="panel">
+    <h2>Your resume</h2>
+    <textarea id="resume" placeholder="Paste your resume here..."></textarea>
+    <h2 style="margin-top:14px;">Job description</h2>
+    <textarea id="jd" placeholder="Paste the job description here..."></textarea>
+    <div class="controls">
+      <button id="run">Check fit</button>
+      <button id="sample" class="sec">Load sample</button>
+      <button id="clear" class="sec">Clear</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div style="display:flex;align-items:baseline;gap:12px;">
+      <div class="score" id="score">—</div>
+      <div>
+        <div class="scorelbl">Match score</div>
+        <div class="bar"><div id="bar"></div></div>
+      </div>
+    </div>
+
+    <h2 style="margin-top:20px;">Missing keywords</h2>
+    <ul class="gap" id="gap"></ul>
+
+    <h2 style="margin-top:16px;">Already in your resume</h2>
+    <div class="matched" id="matched"></div>
+  </div>
+</div>
+
+<footer>
+  Free & open-source. If JobFit helps you land an interview, a $1 tip keeps the tools coming:
+  <a href="https://ko-fi.com/andrwspt" target="_blank" rel="noopener">Ko-fi</a> ·
+  <a href="https://paypal.me/andrwspt" target="_blank" rel="noopener">PayPal</a>
+</footer>
+
+<script>
+const STOP=new Set("a an the and or but if then of to in on at by for with as is are was were be been being this that these those it its he she they we you i me my your our their from into about over under between which who what when where why how not no do does did have has had will would can could should may might must also than so such only own same each more most other some any all both few many one two three first second new year years using used based including across within".split(" "));
+const TITLES=new Set("engineer developer manager director analyst designer coordinator specialist intern lead senior junior associate vp avp ceo cto coo cfo founder co-founder head president chair coordinator administrator architect consultant contractor freelancer volunteer part-time full-time remote hybrid".split(" ""));
+
+function tokenize(t){return t.toLowerCase().replace(/[^a-z0-9+#\s]/g," ").split(/\s+/).filter(w=>w.length>2&&!STOP.has(w));}
+function bigrams(toks){const out=[];for(let i=0;i<toks.length-1;i++)out.push(toks[i]+" "+toks[i+1]);return out;}
+function extractKeywords(text){
+  const toks=tokenize(text);
+  const bi=bigrams(toks);
+  const freq={};
+  for(const t of toks) if(!TITLES.has(t)) freq[t]=(freq[t]||0)+1;
+  for(const b of bi) freq[b]=(freq[b]||0)+2;
+  return Object.entries(freq).filter(([k,v])=>v>1).sort((a,b)=>b[1]-a[1]).slice(0,40).map(([k])=>k);
+}
+function findIn(text,kw){
+  const low=text.toLowerCase();
+  return low.includes(kw.toLowerCase());
+}
+const $=id=>document.getElementById(id);
+$("#run").onclick=()=>{
+  const resume=$("#resume").value.trim();
+  const jd=$("jd").value.trim();
+  if(!resume||!jd){alert("Paste both your resume and a job description first.");return;}
+  const kw=extractKeywords(jd);
+  const missing=[];const hit=[];
+  for(const k of kw){if(findIn(resume,k)) hit.push(k);else missing.push(k);}
+  const pct=Math.round((hit.length/kw.length)*100);
+  $("#score").textContent=pct+"%";
+  $("#bar").style.width=pct+"%";
+  $("#gap").innerHTML=missing.slice(0,15).map(k=>`<li><span class="kw">${k}</span><span class="add">— add this</span></li>`).join("")||`<li style="color:var(--accent)">All top keywords present.</li>`;
+  $("#matched").textContent=hit.join(" · ")||(none);
+};
+$("#sample").onclick=()=>{
+  $("#resume").value="Experienced software developer with 5 years building web applications using JavaScript and Python. Led a team of 3 engineers to deliver a customer management system on AWS. Implemented REST APIs and managed PostgreSQL databases. Passionate about clean code and agile methodologies.";
+  $("#jd").value="We are looking for a Senior Full Stack Engineer to join our growing team. You will design and build scalable microservices using Node.js and React. Experience with TypeScript, Docker, and Kubernetes is required. You will mentor junior engineers, conduct code reviews, and contribute to our CI/CD pipeline. Experience with cloud platforms (AWS preferred) and familiarity with GraphQL is a plus.";
+};
+$("#clear").onclick=()=>{$("#resume").value="";$("#jd").value="";$("#score").textContent="—";$("#bar").style.width="0";$("#gap").innerHTML="";$("#matched").textContent="";};
+</script>
+</body>
+</html>
