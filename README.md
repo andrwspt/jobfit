@@ -4,6 +4,8 @@ Free, offline resume gap checker. Paste your resume and a job description, get y
 
 **No server. No account. No tracking.**
 
+**👉 Live demo:** https://andrwspt.github.io/jobfit/
+
 ---
 
 ## Why it exists
