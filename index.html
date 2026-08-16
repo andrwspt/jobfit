@@ -84,8 +84,8 @@ a{color:var(--accent2);}
 </footer>
 
 <script>
-const STOP=new Set("a an the and or but if then of to in on at by for with as is are was were be been being this that these those it its he she they we you i me my your our their from into about over under between which who what when where why how not no do does did have has had will would can could should may might must also than so such only own same each more most other some any all both few many one two three first second new year years using used based including across within".split(" "));
-const TITLES=new Set("engineer developer manager director analyst designer coordinator specialist intern lead senior junior associate vp avp ceo cto coo cfo founder co-founder head president chair coordinator administrator architect consultant contractor freelancer volunteer part-time full-time remote hybrid".split(" ""));
+const STOP=new Set("a an the and or but if then of to in on at by for with as is are was were be been being this that these those it its he she they we you i me my your our their from into about over under between which who what when where why how not no do does did have has had will would can could should may might must also than so such only own same each more most other some any all both few many one two three first second new year years using used based including across within etc e.g i.e".split(" "));
+const TITLES=new Set("engineer developer manager director analyst designer coordinator specialist intern lead senior junior associate vp avp ceo cto coo cfo founder co-founder head president chair coordinator administrator architect consultant contractor freelancer volunteer part-time full-time remote hybrid principal staff".split(" "));
 
 function tokenize(t){return t.toLowerCase().replace(/[^a-z0-9+#\s]/g," ").split(/\s+/).filter(w=>w.length>2&&!STOP.has(w));}
 function bigrams(toks){const out=[];for(let i=0;i<toks.length-1;i++)out.push(toks[i]+" "+toks[i+1]);return out;}
@@ -104,7 +104,7 @@ function findIn(text,kw){
 const $=id=>document.getElementById(id);
 $("#run").onclick=()=>{
   const resume=$("#resume").value.trim();
-  const jd=$("jd").value.trim();
+  const jd=$("#jd").value.trim();
   if(!resume||!jd){alert("Paste both your resume and a job description first.");return;}
   const kw=extractKeywords(jd);
   const missing=[];const hit=[];
@@ -113,7 +113,7 @@ $("#run").onclick=()=>{
   $("#score").textContent=pct+"%";
   $("#bar").style.width=pct+"%";
   $("#gap").innerHTML=missing.slice(0,15).map(k=>`<li><span class="kw">${k}</span><span class="add">— add this</span></li>`).join("")||`<li style="color:var(--accent)">All top keywords present.</li>`;
-  $("#matched").textContent=hit.join(" · ")||(none);
+  $("#matched").textContent=hit.join(" · ")||"none";
   if(pct<90){
     const nudge=document.createElement("div");
     nudge.id="nudge";
@@ -127,8 +127,8 @@ $("#sample").onclick=()=>{
   $("#resume").value="Experienced software developer with 5 years building web applications using JavaScript and Python. Led a team of 3 engineers to deliver a customer management system on AWS. Implemented REST APIs and managed PostgreSQL databases. Passionate about clean code and agile methodologies.";
   $("#jd").value="We are looking for a Senior Full Stack Engineer to join our growing team. You will design and build scalable microservices using Node.js and React. Experience with TypeScript, Docker, and Kubernetes is required. You will mentor junior engineers, conduct code reviews, and contribute to our CI/CD pipeline. Experience with cloud platforms (AWS preferred) and familiarity with GraphQL is a plus.";
 };
-$("clear").onclick=()=>{$("#resume").value="";$("#jd").value="";$("#score").textContent="—";$("#bar").style.width="0";$("#gap").innerHTML="";$("#matched").textContent="";};
-$("shareBtn").onclick=(e)=>{e.preventDefault();navigator.share?navigator.share({title:"JobFit — free resume gap checker",url:location.href}):navigator.clipboard.writeText(location.href);};
+$("#clear").onclick=()=>{$("#resume").value="";$("#jd").value="";$("#score").textContent="—";$("#bar").style.width="0";$("#gap").innerHTML="";$("#matched").textContent="";};
+$("#shareBtn").onclick=(e)=>{e.preventDefault();navigator.share?navigator.share({title:"JobFit — free resume gap checker",url:location.href}):navigator.clipboard.writeText(location.href);};
 </script>
 </body>
 </html>
