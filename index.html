@@ -3,16 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JobFit — free resume gap checker</title>
-<meta name="description" content="JobFit — free offline resume gap checker. Paste your resume + a job description, get your match score and the exact keywords you're missing. No server, no tracking, no account.">
-<meta name="keywords" content="resume checker, job fit, ATS, job search, resume gap, keyword matcher, free tool, offline, privacy">
-<meta property="og:title" content="JobFit — free offline resume gap checker">
-<meta property="og:description" content="Paste your resume + a job description → get your match score + missing keywords. No server, no tracking, no account.">
+<title>Resume Roast by JobFit — Free Offline Resume Gap Checker</title>
+<meta name="description" content="Paste your resume + a job description. Get roasted. Find out exactly which keywords you are missing. 100% offline, no tracking, no account.">
+<meta property="og:title" content="Resume Roast — Free Offline Gap Checker">
+<meta property="og:description" content="Find out which keywords your resume is missing vs. the job description. No server, no tracking, no account.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://andrwspt.github.io/jobfit/">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="JobFit — free offline resume gap checker">
-<meta name="twitter:description" content="Paste your resume + a job description → get your match score + missing keywords. 100% offline, no tracking.">
+<meta name="twitter:title" content="Resume Roast — Free Offline Gap Checker">
+<meta name="twitter:description" content="Paste your resume + a job description. Get roasted. Find out which keywords you are missing.">
 <style>
 :root{--bg:#0b0e13;--panel:#141922;--line:#232a36;--txt:#e6edf3;--muted:#7d8ba1;--accent:#4dd0a7;--accent2:#58a6ff;--warn:#e3b341;--bad:#f85149;}
 *{box-sizing:border-box;}
@@ -44,13 +43,20 @@ a{color:var(--accent2);}
 .cta a:hover{transform:scale(1.05);}
 .cta .kofi{background:#ff5e5b;color:#fff;}
 .cta .paypal{background:#003087;color:#fff;}
-.cta .share{background:transparent;color:var(--accent2);border:1px solid var(--accent2);}
+.share-card{display:none;margin-top:14px;padding:14px;border:1px solid var(--accent);border-radius:8px;background:rgba(77,208,167,.05);}
+.share-card.show{display:block;}
+.share-card textarea{width:100%;min-height:80px;font-size:12px;background:#0d1117;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:10px;resize:none;margin-top:8px;}
+.share-card .copy-btn{margin-top:8px;}
+.roast-banner{display:none;margin-top:14px;padding:12px 14px;border-radius:8px;text-align:center;font-weight:600;}
+.roast-banner.show{display:block;}
+.roast-banner.bad{background:rgba(248,81,73,.15);border:1px solid var(--bad);color:var(--bad);}
+.roast-banner.ok{background:rgba(77,208,167,.15);border:1px solid var(--accent);color:var(--accent);}
 </style>
 </head>
 <body>
 <header>
-  <h1>JobFit</h1>
-  <div class="sub">Free, offline resume gap checker. Paste your resume + a job description, get missing keywords and a match score. No server, no tracking, no account.</div>
+  <h1>🔥 Resume Roast</h1>
+  <div class="sub">Paste your resume + a job description. Find out exactly which keywords you are missing — before a recruiter rejects you. 100% offline, no tracking, no account.</div>
   <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap;">
     <span style="font-size:11px;padding:3px 10px;border:1px solid var(--line);border-radius:12px;color:var(--muted);">🔒 100% offline</span>
     <span style="font-size:11px;padding:3px 10px;border:1px solid var(--line);border-radius:12px;color:var(--muted);">⚡ No account</span>
@@ -65,10 +71,9 @@ a{color:var(--accent2);}
     <h2 style="margin-top:14px;">Job description</h2>
     <textarea id="jd" placeholder="Paste the job description here..."></textarea>
     <div class="controls">
-      <button id="run">Check fit</button>
+      <button id="run">🔥 Roast my resume</button>
       <button id="sample" class="sec">Load sample</button>
       <button id="clear" class="sec">Clear</button>
-      <button id="share" class="sec">🔗 Share</button>
     </div>
   </div>
 
@@ -81,20 +86,27 @@ a{color:var(--accent2);}
       </div>
     </div>
 
+    <div id="roastBanner" class="roast-banner"></div>
+
     <h2 style="margin-top:20px;">Missing keywords</h2>
     <ul class="gap" id="gap"></ul>
 
     <h2 style="margin-top:16px;">Already in your resume</h2>
     <div class="matched" id="matched"></div>
+
+    <div id="shareCard" class="share-card">
+      <div style="font-weight:600;color:var(--accent);">📣 Share your roast</div>
+      <textarea id="shareText" readonly></textarea>
+      <button class="copy-btn" id="copyShare">📋 Copy and share</button>
+    </div>
   </div>
 </div>
 
 <footer>
-  <div>Free & open-source. If JobFit helps you land an interview, a $1 tip keeps the tools coming:</div>
+  <div>Free and open-source. If this roast saved your resume, a $1 tip keeps the heat coming:</div>
   <div class="cta">
     <a href="https://ko-fi.com/andrwspt" target="_blank" rel="noopener" class="kofi">☕ Ko-fi</a>
     <a href="https://paypal.me/andrwspt" target="_blank" rel="noopener" class="paypal">💳 PayPal</a>
-    <a href="#" id="shareBtn" class="share">🔗 Share</a>
   </div>
 </footer>
 
@@ -117,6 +129,25 @@ function findIn(text,kw){
   return low.includes(kw.toLowerCase());
 }
 const $=id=>document.getElementById(id);
+
+function getRoast(pct) {
+  if (pct >= 85) return {cls:"ok",text:"🔥 Your resume is on fire! Just a few tweaks and it is perfect."};
+  if (pct >= 70) return {cls:"ok",text:"🔥 Not bad! But you are still missing some key terms."};
+  if (pct >= 50) return {cls:"bad",text:"⚠️ Oof. Over half the keywords are missing. Time to rewrite."};
+  if (pct >= 30) return {cls:"bad",text:"💀 Brutal. Your resume is getting auto-rejected."};
+  return {cls:"bad",text:"🪦 RIP. This resume is not making it past the bots."};
+}
+
+function getShareText(pct, missing) {
+  const topMissing = missing.slice(0,5).join(", ");
+  let msg;
+  if (pct >= 85) msg = "I scored "+pct+"% on Resume Roast! 🔥 Just missing: "+topMissing+".";
+  else if (pct >= 60) msg = "I scored "+pct+"% on Resume Roast ⚠️ Missing: "+topMissing+". Time to fix it.";
+  else msg = "I scored "+pct+"% on Resume Roast 💀 Missing: "+topMissing+". It is over.";
+  msg += "\n\nRoast your resume: https://andrwspt.github.io/jobfit/";
+  return msg;
+}
+
 $("#run").onclick=()=>{
   const resume=$("#resume").value.trim();
   const jd=$("#jd").value.trim();
@@ -127,23 +158,43 @@ $("#run").onclick=()=>{
   const pct=Math.round((hit.length/kw.length)*100);
   $("#score").textContent=pct+"%";
   $("#bar").style.width=pct+"%";
-  $("#gap").innerHTML=missing.slice(0,15).map(k=>`<li><span class="kw">${k}</span><span class="add">— add this</span></li>`).join("")||`<li style="color:var(--accent)">All top keywords present.</li>`;
+  $("#gap").innerHTML=missing.slice(0,15).map(k=>'<li><span class="kw">'+k+'</span><span class="add">— add this</span></li>').join("")||'<li style="color:var(--accent)">All top keywords present.</li>';
   $("#matched").textContent=hit.join(" · ")||"none";
+
+  const roast=getRoast(pct);
+  const banner=$("#roastBanner");
+  banner.className="roast-banner show "+roast.cls;
+  banner.textContent=roast.text;
+
+  $("#shareCard").classList.add("show");
+  $("#shareText").value=getShareText(pct,missing);
+
   if(pct<90){
     const nudge=document.createElement("div");
     nudge.id="nudge";
     nudge.style.cssText="margin-top:14px;padding:10px 14px;border:1px solid var(--accent);border-radius:8px;font-size:12px;color:var(--accent);text-align:center;";
-    nudge.innerHTML=`💡 Below 90%? Fix those missing keywords, then re-check. If JobFit helped, a $1 tip keeps it going: <a href="https://ko-fi.com/andrwspt" target="_blank" rel="noopener" style="color:#ff5e5b;font-weight:600;">Ko-fi</a> · <a href="https://paypal.me/andrwspt" target="_blank" rel="noopener" style="color:#58a6ff;font-weight:600;">PayPal</a>`;
+    nudge.innerHTML='💡 Below 90%? Fix those missing keywords, then re-check. If JobFit helped, a $1 tip keeps it going: <a href="https://ko-fi.com/andrwspt" target="_blank" rel="noopener" style="color:#ff5e5b;font-weight:600;">Ko-fi</a> · <a href="https://paypal.me/andrwspt" target="_blank" rel="noopener" style="color:#58a6ff;font-weight:600;">PayPal</a>';
     const prev=document.getElementById("nudge"); if(prev) prev.remove();
     $("#gap").after(nudge);
   }
 };
+
+$("#copyShare").onclick=()=>{
+  const ta=$("#shareText");
+  ta.select();
+  navigator.clipboard.writeText(ta.value).then(()=>{
+    const btn=$("#copyShare");
+    btn.textContent="✅ Copied!";
+    setTimeout(()=>{btn.textContent="📋 Copy and share";},2000);
+  });
+};
+
 $("#sample").onclick=()=>{
   $("#resume").value="Experienced software developer with 5 years building web applications using JavaScript and Python. Led a team of 3 engineers to deliver a customer management system on AWS. Implemented REST APIs and managed PostgreSQL databases. Passionate about clean code and agile methodologies.";
   $("#jd").value="We are looking for a Senior Full Stack Engineer to join our growing team. You will design and build scalable microservices using Node.js and React. Experience with TypeScript, Docker, and Kubernetes is required. You will mentor junior engineers, conduct code reviews, and contribute to our CI/CD pipeline. Experience with cloud platforms (AWS preferred) and familiarity with GraphQL is a plus.";
 };
-$("#clear").onclick=()=>{$("#resume").value="";$("#jd").value="";$("#score").textContent="—";$("#bar").style.width="0";$("#gap").innerHTML="";$("#matched").textContent="";};
-$("#shareBtn").onclick=(e)=>{e.preventDefault();navigator.share?navigator.share({title:"JobFit — free resume gap checker",url:location.href}):navigator.clipboard.writeText(location.href);};
+
+$("#clear").onclick=()=>{$("#resume").value="";$("#jd").value="";$("#score").textContent="—";$("#bar").style.width="0";$("#gap").innerHTML="";$("#matched").textContent="";$("#roastBanner").className="roast-banner";$("#shareCard").classList.remove("show");const n=document.getElementById("nudge");if(n)n.remove();};
 </script>
 </body>
 </html>
